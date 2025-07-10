@@ -2,11 +2,6 @@
 
 This repository documents my learning journey as I follow the [DevOps Roadmap](https://roadmap.sh/devops). It includes notes, projects, and resources for each step of the roadmap, showcasing my progress and practical implementations.
 
-## 📌 Repository Structure
-- 📂 `notes/` → Summarized notes on key DevOps topics  
-- 🔧 `projects/` → Hands-on projects from roadmap.sh  
-- 📜 `roadmap.md` → Overview of topics covered  
-
 ## 🚀 Roadmap.sh DevOps Projects
 
 Here are the projects I’ve worked on, following the [DevOps Roadmap Projects](https://roadmap.sh/devops/projects):
