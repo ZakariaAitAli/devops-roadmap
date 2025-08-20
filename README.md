@@ -12,9 +12,9 @@ Here are the projects I’ve worked on, following the [DevOps Roadmap Projects](
 3. [Nginx Log Analyser](https://roadmap.sh/projects/nginx-log-analyser)  
 4. [GitHub Pages Deployment](https://roadmap.sh/projects/github-actions-deployment-workflow)  
 5. [SSH Remote Server Setup](https://roadmap.sh/projects/ssh-remote-server-setup)  
+6. [Static Site Server](https://roadmap.sh/projects/static-site-server)
 
 ### ⏳ In Progress / Upcoming Projects
-6. [Static Site Server](https://roadmap.sh/projects/static-site-server)  
 7. [Basic DNS Setup](https://roadmap.sh/projects/basic-dns)  
 8. [Simple Monitoring](https://roadmap.sh/projects/simple-monitoring-dashboard)  
 9. [Dummy Systemd Service](https://roadmap.sh/projects/dummy-systemd-service)  
