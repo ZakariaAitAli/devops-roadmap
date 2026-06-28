@@ -1,94 +1,55 @@
-# Static Site Server with AWS + Nginx
+# Static Site Server
 
-This project demonstrates how to set up a **basic Linux server on AWS** and configure it to serve a **static website using Nginx**. It also includes an automated deployment workflow using **rsync** and a `deploy.sh` script.
+Provisions an AWS EC2 instance, installs and configures Nginx to serve a static website, and deploys site files from a local machine using `rsync`.
 
-The goal is to understand:
-
-* Provisioning and connecting to a Linux server (EC2)
-* Installing and configuring **Nginx** on Amazon Linux 2023
-* Serving static files from `/var/www/static-site`
-* Deploying updates from a local machine using **rsync**
-* (Optional) Connecting a **domain name** to the server
-
----
-
-## 🚀 Architecture
+## Architecture
 
 ```
-Local Machine ──(rsync/ssh)──▶ AWS EC2 Instance ──▶ Nginx ──▶ Browser
+Local machine  ---(rsync over SSH)--->  EC2 (Amazon Linux 2023)  --->  Nginx  --->  Browser
 ```
 
----
+## Requirements
 
-## 🛠️ Requirements
+- AWS account (free tier eligible)
+- EC2 instance running Amazon Linux 2023
+- SSH key pair (`.pem` file)
+- `rsync` installed locally
+- Nginx installed on the server
 
-* **AWS Account** (Free tier available)
-* **Amazon Linux 2023 EC2 instance**
-* **SSH key pair (.pem file)**
-* **Nginx** installed on the server
-* **rsync** installed locally
-* (Optional) Domain name pointing to your EC2’s public IP
+## Server Setup
 
----
+### 1. Launch an EC2 instance
 
-## ⚙️ Setup Steps
+- AMI: Amazon Linux 2023
+- Instance type: t2.micro (free tier)
+- Security group: allow inbound SSH (22) and HTTP (80)
 
-### 1. Launch an EC2 Instance
-
-1. Go to the **AWS Management Console**
-2. Create a new **EC2 instance**:
-
-   * Amazon Linux 2023
-   * t2.micro (free tier eligible)
-   * Allow **SSH (22)** and **HTTP (80)** in security group
-3. Download and save your **.pem key**
-4. Connect via SSH:
+Connect to the instance:
 
 ```bash
-ssh -i personal.pem ec2-user@<EC2_PUBLIC_IP>
+ssh -i ~/.ssh/your-key.pem ec2-user@<EC2-PUBLIC-IP>
 ```
-
----
 
 ### 2. Install Nginx
 
-Amazon Linux 2023 uses `yum` instead of `apt`.
-
 ```bash
-# Update packages
 sudo yum update -y
-
-# Install nginx
 sudo yum install nginx -y
-
-# Enable and start nginx
-sudo systemctl enable nginx
-sudo systemctl start nginx
-
-# Verify status
-systemctl status nginx
+sudo systemctl enable --now nginx
 ```
 
-Visit `http://<EC2_PUBLIC_IP>` and you should see the default Nginx welcome page ✅.
+Verify: open `http://<EC2-PUBLIC-IP>` in a browser — you should see the Nginx default page.
 
----
+### 3. Configure Nginx
 
-### 3. Configure Nginx for the Static Site
-
-1. Create the web root:
+Create the web root:
 
 ```bash
 sudo mkdir -p /var/www/static-site
-sudo chown -R $USER:$USER /var/www/static-site
+sudo chown -R ec2-user:ec2-user /var/www/static-site
 ```
 
-2. Create a new server block in `/etc/nginx/conf.d/`:
-
-```bash
-sudo nano /etc/nginx/conf.d/static-site.conf
-```
-
-Paste:
+Create a server block at `/etc/nginx/conf.d/static-site.conf`:
 
 ```nginx
 server {
@@ -104,98 +65,55 @@ server {
 }
 ```
 
-3. Test and reload:
+Test and reload:
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
----
+## Local Deployment
 
-### 4. Build a Simple Static Site
+### Configure environment
 
-Local project structure:
-
-```
-static-site/
-├── index.html
-├── styles.css
-└── images/
-    └── aws.png
-```
-
-Example `index.html`:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Static Site on AWS</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <h1>Hello from AWS + Nginx 🎉</h1>
-    <p>This site is served from an EC2 instance running Amazon Linux 2023.</p>
-    <img src="images/aws.png" alt="AWS Logo">
-</body>
-</html>
-```
-
----
-
-### 5. Deploy with rsync
-
-Create `deploy.sh`:
+Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
-#!/bin/bash
-
-USER=ec2-user
-HOST=<EC2_PUBLIC_IP>
-KEY=~/Projects/personal.pem
-SOURCE=./static-site/
-TARGET=/var/www/static-site/
-
-echo "🚀 Deploying to $USER@$HOST ..."
-rsync -avz -e "ssh -i $KEY" $SOURCE $USER@$HOST:$TARGET
-echo "✅ Deployment complete! Visit http://$HOST"
+cp .env.example .env
 ```
 
-Make it executable:
+```bash
+DEPLOY_USER=ec2-user
+DEPLOY_HOST=<your-ec2-public-dns-or-ip>
+DEPLOY_KEY=~/.ssh/your-key.pem
+DEPLOY_SOURCE=./static-site/
+DEPLOY_TARGET=/var/www/static-site/
+```
+
+`.env` is listed in `.gitignore` and will not be committed.
+
+### Deploy
 
 ```bash
 chmod +x deploy.sh
-```
-
-Run deployment:
-
-```bash
 ./deploy.sh
 ```
 
-Now refresh `http://<EC2_PUBLIC_IP>` → your static site is live 🎉.
+The script reads variables from `.env`, then runs:
 
----
+```bash
+rsync -avz -e "ssh -i $KEY" ./static-site/ ec2-user@<HOST>:/var/www/static-site/
+```
 
-### 6. (Optional) Domain Setup
+`rsync` transfers only changed files, making subsequent deploys fast.
 
-If you own a domain:
+## Optional: Custom Domain
 
-1. Add an **A record** pointing to your EC2 public IP
+1. Add an **A record** in your DNS provider pointing to the EC2 public IP.
 2. Update `server_name` in `/etc/nginx/conf.d/static-site.conf`:
 
 ```nginx
-server {
-    listen 80;
-    server_name example.com www.example.com;
-    root /var/www/static-site;
-    index index.html;
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
+server_name example.com www.example.com;
 ```
 
 3. Reload Nginx:
@@ -204,29 +122,20 @@ server {
 sudo systemctl reload nginx
 ```
 
-Now your static site is live at `http://example.com`.
-
----
-
-## 📂 Project Structure
+## Files
 
 ```
-.
-├── static-site/
-│   ├── index.html
-│   ├── styles.css
-│   └── images/
-├── deploy.sh
-└── README.md
+06-static-site-server/
+  deploy.sh             Deployment script (reads config from .env)
+  .env.example          Template for required environment variables
+  static-site/
+    index.html
+    styles.css
+    images/
+      aws.png
+  README.md
 ```
 
----
+## Reference
 
-## ✅ Learning Outcomes
-
-By completing this project, you will:
-
-* Understand how to provision and configure Amazon Linux EC2
-* Serve a static site using **Nginx**
-* Automate deployments with **rsync**
-* Configure DNS for a custom domain
+[roadmap.sh — Static Site Server](https://roadmap.sh/projects/static-site-server)

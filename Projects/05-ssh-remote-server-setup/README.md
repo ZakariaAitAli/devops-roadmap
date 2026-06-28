@@ -1,74 +1,79 @@
 # SSH Remote Server Setup
 
-## 🚀 Project Overview
+Configures an AWS EC2 instance for SSH access using two separate key pairs, hardens the SSH daemon, and installs Fail2Ban to protect against brute-force attacks.
 
-This project demonstrates how to **set up a remote Linux server** on **AWS EC2** and configure **SSH access** using **two different key pairs**. The setup also includes simplifying the connection using the `~/.ssh/config` file.
+## Requirements
 
-## 🛠 Requirements
+- An AWS EC2 instance (Amazon Linux 2023 or Ubuntu)
+- Two SSH key pairs generated locally
+- SSH client on your local machine
 
-* A **remote EC2 instance** (Amazon Linux 2023).
+## Setup
 
-* Two **SSH key pairs** generated locally:
+### 1. Generate two key pairs locally
 
-  ```bash
-  ssh-keygen -t rsa -f ~/.ssh/id_rsa_key1
-  ssh-keygen -t rsa -f ~/.ssh/id_rsa_key2
-  ```
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_key1 -C "key1"
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_key2 -C "key2"
+```
 
-* Both public keys added to the server’s `~/.ssh/authorized_keys` file:
+### 2. Run the setup script on the remote server
 
-  ```bash
-  cat ~/.ssh/id_rsa_key1.pub >> ~/.ssh/authorized_keys
-  cat ~/.ssh/id_rsa_key2.pub >> ~/.ssh/authorized_keys
-  ```
+Copy both public keys to the server and run the script:
 
-* SSH access should work with both private keys:
+```bash
+scp ~/.ssh/id_ed25519_key1.pub ~/.ssh/id_ed25519_key2.pub ec2-user@<EC2-PUBLIC-IP>:~/
+ssh -i <original-key.pem> ec2-user@<EC2-PUBLIC-IP> \
+  'bash -s' < setup.sh id_ed25519_key1.pub id_ed25519_key2.pub
+```
 
-  ```bash
-  ssh -i ~/.ssh/id_rsa_key1 ec2-user@<EC2-PUBLIC-IP>
-  ssh -i ~/.ssh/id_rsa_key2 ec2-user@<EC2-PUBLIC-IP>
-  ```
+The script:
+1. Appends both public keys to `~/.ssh/authorized_keys`
+2. Disables root login and password authentication via `/etc/ssh/sshd_config.d/hardening.conf`
+3. Restarts `sshd`
+4. Installs and enables Fail2Ban
 
-* A configured `~/.ssh/config` file to allow simplified connections:
+### 3. Configure `~/.ssh/config` locally
 
-  ```bash
-  # ~/.ssh/config
+Add entries to `~/.ssh/config` so you can connect without specifying the key each time:
 
-  Host remote-server-key1
-    HostName <EC2-PUBLIC-IP>
-    User ec2-user
-    IdentityFile ~/.ssh/id_rsa_key1
+```
+Host ec2-key1
+  HostName <EC2-PUBLIC-IP>
+  User ec2-user
+  IdentityFile ~/.ssh/id_ed25519_key1
 
-  Host remote-server-key2
-    HostName <EC2-PUBLIC-IP>
-    User ec2-user
-    IdentityFile ~/.ssh/id_rsa_key2
-  ```
+Host ec2-key2
+  HostName <EC2-PUBLIC-IP>
+  User ec2-user
+  IdentityFile ~/.ssh/id_ed25519_key2
+```
 
-* You can now connect using simple commands:
+### 4. Connect
 
-  ```bash
-  ssh remote-server-key1
-  ssh remote-server-key2
-  ```
+```bash
+ssh ec2-key1
+ssh ec2-key2
+```
 
-## 🎯 Stretch Goals
+Both should connect successfully before you close your original session.
 
-* Install and configure **Fail2Ban** to protect the server from SSH brute-force attacks:
+## Security Hardening Applied
 
-  ```bash
-  sudo yum install epel-release -y
-  sudo yum install fail2ban -y
-  sudo systemctl enable fail2ban
-  sudo systemctl start fail2ban
-  ```
+| Setting | Value | Reason |
+|---------|-------|--------|
+| `PermitRootLogin` | `no` | Eliminates direct root access |
+| `PasswordAuthentication` | `no` | Forces key-based auth only |
+| Fail2Ban | enabled | Bans IPs after repeated failed SSH attempts |
 
-## 📚 Key Concepts Learned
+## Files
 
-* **EC2 Instance Setup on AWS**
-* **SSH Key Generation and Configuration**
-* **Managing Multiple SSH Keys**
-* **Simplifying Access with `~/.ssh/config`**
-* **Basic Linux Hardening with Fail2Ban**
+```
+05-ssh-remote-server-setup/
+  setup.sh     Automates key authorization, SSH hardening, and Fail2Ban installation
+  README.md
+```
 
-For more details, check out: [SSH Remote Server Setup Project](https://roadmap.sh/projects/ssh-remote-server-setup)
+## Reference
+
+[roadmap.sh — SSH Remote Server Setup](https://roadmap.sh/projects/ssh-remote-server-setup)
