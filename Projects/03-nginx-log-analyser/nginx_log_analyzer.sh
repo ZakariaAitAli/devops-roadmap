@@ -10,7 +10,7 @@ if [ ! -f "$LOG_FILE" ]; then
 fi
 
 TOTAL=$(wc -l < "$LOG_FILE")
-echo "Log file:      $LOG_FILE"
+echo "Log file:       $LOG_FILE"
 echo "Total requests: $TOTAL"
 
 echo ""
@@ -21,13 +21,15 @@ awk '{print $1}' "$LOG_FILE" \
 
 echo ""
 echo "Top 5 requested paths:"
-awk '{print $7}' "$LOG_FILE" \
+# Split on " to get the request line ($2 = "METHOD PATH HTTP/x.y"), then extract the path
+awk -F'"' '{split($2, req, " "); if (req[2] != "") print req[2]}' "$LOG_FILE" \
   | sort | uniq -c | sort -rn | head -5 \
   | awk '{printf "  %-40s %s requests\n", $2, $1}'
 
 echo ""
 echo "Top 5 response status codes:"
-awk '{print $9}' "$LOG_FILE" \
+# $3 when splitting on " is " STATUS BYTES " — status is the 2nd space-delimited token
+awk -F'"' '{split($3, rest, " "); if (rest[2] != "") print rest[2]}' "$LOG_FILE" \
   | sort | uniq -c | sort -rn | head -5 \
   | awk '{printf "  %s   %s requests\n", $2, $1}'
 

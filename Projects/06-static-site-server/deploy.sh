@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
@@ -13,5 +14,10 @@ HOST=${DEPLOY_HOST:?Error: DEPLOY_HOST is not set. Create a .env file or export 
 KEY=${DEPLOY_KEY:-~/.ssh/id_rsa}
 SOURCE=${DEPLOY_SOURCE:-./static-site/}
 TARGET=${DEPLOY_TARGET:-/var/www/static-site/}
+
+# Resolve SOURCE relative to the script directory, not the caller's CWD
+if [[ "$SOURCE" != /* ]]; then
+  SOURCE="$SCRIPT_DIR/$SOURCE"
+fi
 
 rsync -avz -e "ssh -i $KEY" "$SOURCE" "$USER@$HOST:$TARGET"

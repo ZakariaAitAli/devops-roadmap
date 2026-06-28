@@ -4,11 +4,12 @@ A GitHub Actions workflow that automatically deploys a static site to GitHub Pag
 
 ## How It Works
 
-The workflow file at `.github/workflows/static.yml` is triggered on push to `main` (and can also be run manually via the Actions tab). It runs three steps:
+The workflow file at `.github/workflows/static.yml` is triggered on push to `main` (and can also be run manually via the Actions tab). It runs four steps:
 
 1. Checks out the repository.
-2. Uploads the repository contents as a Pages artifact.
-3. Deploys the artifact to GitHub Pages.
+2. Configures GitHub Pages (`actions/configure-pages@v5`).
+3. Uploads the repository contents as a Pages artifact.
+4. Deploys the artifact to GitHub Pages.
 
 The site is then live at `https://<username>.github.io/<repo-name>/`.
 

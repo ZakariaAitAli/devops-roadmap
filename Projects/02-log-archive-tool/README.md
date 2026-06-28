@@ -31,7 +31,7 @@ sudo chmod +x /usr/local/bin/log-archive
 
 Output:
 
-```
+```text
 Archive created: /home/user/archives/logs_archive_20241004_143022.tar.gz
 ```
 
@@ -45,7 +45,7 @@ Archive created: /home/user/archives/logs_archive_20241004_143022.tar.gz
 
 ## Archive Structure
 
-```
+```text
 archives/
   logs_archive_20241004_143022.tar.gz
   logs_archive_20241005_020001.tar.gz
@@ -54,7 +54,7 @@ archives/
 
 The `archive.log` file contains one line per run:
 
-```
+```text
 [2024-10-04 14:30:22] Archived '/var/log' -> '/home/user/archives/logs_archive_20241004_143022.tar.gz'
 ```
 
@@ -68,7 +68,7 @@ crontab -e
 
 Add:
 
-```
+```text
 0 0 * * * /usr/local/bin/log-archive /var/log
 ```
 

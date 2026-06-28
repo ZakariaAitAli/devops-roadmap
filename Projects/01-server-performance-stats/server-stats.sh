@@ -25,7 +25,10 @@ ps -eo pid,comm,%mem --sort=-%mem | head -n 6
 
 echo ""
 echo "=== System Info ==="
-echo "OS:           $(lsb_release -d | cut -f2)"
+OS=$(grep -m1 PRETTY_NAME /etc/os-release 2>/dev/null | cut -d'"' -f2 \
+  || lsb_release -d 2>/dev/null | cut -f2 \
+  || echo "Unknown")
+echo "OS:           $OS"
 echo "Uptime:       $(uptime -p)"
 echo "Load Average: $(uptime | awk -F 'load average:' '{print $2}' | xargs)"
 echo "Logged Users: $(who | wc -l)"
