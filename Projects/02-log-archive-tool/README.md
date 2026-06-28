@@ -1,57 +1,82 @@
 # Log Archive Tool
 
-## Description
-The Log Archive Tool is a simple command-line utility that allows users to archive logs from a specified directory. The tool compresses log files into a `.tar.gz` archive, storing them in a dedicated `archives` folder within the current working directory. This helps in maintaining system cleanliness while preserving logs for future reference.
-
-## Features
-- Archives logs from a given directory.
-- Saves compressed logs in an `archives` folder.
-- Names archives with a timestamp (e.g., `logs_archive_YYYYMMDD_HHMMSS.tar.gz`).
-- Logs each archive operation with date and time.
+A Bash script that compresses a directory of logs into a timestamped `.tar.gz` archive and records each operation to an audit log.
 
 ## Requirements
-- A Unix-based system (Linux/macOS).
-- `tar` command must be available.
-- Sufficient permissions to read logs and create archives.
+
+- Linux or macOS
+- `bash`, `tar`
+- Write access to the current working directory
 
 ## Installation
-To make the script accessible from anywhere, move it to `/usr/local/bin/` and grant execution permissions:
 
-```sh
-sudo mv log-archive.sh /usr/local/bin/log-archive
+To make the script available system-wide:
+
+```bash
+sudo cp log-archive.sh /usr/local/bin/log-archive
 sudo chmod +x /usr/local/bin/log-archive
 ```
 
 ## Usage
-Run the command with a log directory as an argument:
 
-```sh
-log-archive <log-directory>
+```bash
+./log-archive.sh <log-directory>
 ```
 
 ### Example
-```sh
-log-archive /var/log
+
+```bash
+./log-archive.sh /var/log
 ```
+
 Output:
+
 ```
-Logs successfully archived: /current/directory/archives/logs_archive_YYYYMMDD_HHMMSS.tar.gz
+Archive created: /home/user/archives/logs_archive_20241004_143022.tar.gz
 ```
 
 ## How It Works
-1. The tool validates the input and checks if the log directory exists.
-2. Creates an `archives` folder in the current working directory if it doesn’t exist.
-3. Compresses the log files using `tar`.
-4. Logs the archive operation with a timestamp.
 
-## Advanced Features (Future Enhancements)
-- Automate archiving with a cron job:
-  ```sh
-  0 0 * * * /usr/local/bin/log-archive /var/log
-  ```
-- Email notifications after archiving.
-- Upload archived logs to cloud storage.
+1. Validates that exactly one argument is provided.
+2. Checks that the target directory exists.
+3. Creates an `archives/` directory in the current working directory if it does not exist.
+4. Compresses the entire log directory into `archives/logs_archive_<YYYYMMDD_HHMMSS>.tar.gz`.
+5. Appends a timestamped entry to `archives/archive.log` for auditing.
 
-## License
-This project is open-source and available for use and modification.
+## Archive Structure
 
+```
+archives/
+  logs_archive_20241004_143022.tar.gz
+  logs_archive_20241005_020001.tar.gz
+  archive.log
+```
+
+The `archive.log` file contains one line per run:
+
+```
+[2024-10-04 14:30:22] Archived '/var/log' -> '/home/user/archives/logs_archive_20241004_143022.tar.gz'
+```
+
+## Automating with cron
+
+To archive `/var/log` every night at midnight:
+
+```bash
+crontab -e
+```
+
+Add:
+
+```
+0 0 * * * /usr/local/bin/log-archive /var/log
+```
+
+## Notes
+
+- The script uses `set -euo pipefail` so it exits immediately on any error.
+- If the log directory contains files owned by root (e.g., `/var/log/auth.log`), run the script with `sudo`.
+
+## Reference
+
+[roadmap.sh — Log Archive Tool](https://roadmap.sh/projects/log-archive-tool)

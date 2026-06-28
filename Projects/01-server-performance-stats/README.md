@@ -1,33 +1,54 @@
 # Server Performance Stats
-A bash script to analyse basic server performance stats.  
 
-- Goal of this project is to write a script to analyse server performance stats.
+A Bash script that reports key performance metrics from any Linux server: CPU, memory, disk, top processes, and system info.
 
 ## Requirements
-You are required to write a script server-stats.sh that can analyse basic server performance stats. You should be able to run the script on any Linux server and it should give you the following stats:
 
-- Total CPU usage
-- Total memory usage (Free vs Used including percentage)
-- Total disk usage (Free vs Used including percentage)
-- Top 5 processes by CPU usage
-- Top 5 processes by memory usage
+- Linux (any distribution with `bash`, `top`, `free`, `df`, `ps`, `uptime`, `lsb_release`)
+- Run as a user with read access to process information
 
-**Stretch goal:** optionally add more stats such as os version, uptime, load average, logged in users, failed login attempts etc.
+## Usage
 
-## Getting Started
+```bash
+chmod +x server-stats.sh
+./server-stats.sh
+```
 
-1. **Clone the repository**
-    ```
-    git clone https://github.com/ZakariaAitAli/devops-roadmap
-    cd Projects/server-performance-stats
-    ```
-2. **Make the script executable**
-    ```
-    chmod +x server-stats.sh
-    ```
-3. **Execute the script**  
-    ```
-    ./server-stats.sh
-    ```
+## Output
 
-This project is part of [roadmap.sh](https://roadmap.sh/projects/server-stats) DevOps projects.
+```
+=== CPU Usage ===
+CPU Usage: 12.5%
+
+=== Memory Usage ===
+Used: 1024MB / Total: 3840MB (26.67%)
+
+=== Disk Usage ===
+Used: 8.5G / Total: 20G (44%)
+
+=== Top 5 Processes by CPU Usage ===
+  PID COMMAND         %CPU
+ 1234 node            12.3
+  ...
+
+=== Top 5 Processes by Memory Usage ===
+  PID COMMAND         %MEM
+ 1234 node             5.1
+  ...
+
+=== System Info ===
+OS:           Ubuntu 22.04.3 LTS
+Uptime:       up 3 days, 4 hours, 22 minutes
+Load Average:  0.45, 0.38, 0.31
+Logged Users: 2
+```
+
+## Notes
+
+- Memory is reported in MB using `free -m`, which avoids floating-point issues with human-readable suffixes.
+- Disk usage aggregates all mounted filesystems via `df --total`.
+- The script exits immediately on any command failure (`set -euo pipefail`).
+
+## Reference
+
+[roadmap.sh — Server Performance Stats](https://roadmap.sh/projects/server-stats)
