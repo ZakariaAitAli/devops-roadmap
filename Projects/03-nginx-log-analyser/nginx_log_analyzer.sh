@@ -1,26 +1,41 @@
 #!/bin/bash
+set -euo pipefail
 
-LOG_FILE=${1:-access.log}  # Default to 'access.log' if no argument is given
+LOG_FILE="${1:-nginx-access.log}"
 
-if [[ ! -f "$LOG_FILE" ]]; then
-    echo "Error: Log file not found!"
-    exit 1
+if [ ! -f "$LOG_FILE" ]; then
+  echo "Error: log file '$LOG_FILE' not found." >&2
+  echo "Usage: $(basename "$0") [log-file]" >&2
+  exit 1
 fi
 
-echo "Analyzing log file: $LOG_FILE"
+TOTAL=$(wc -l < "$LOG_FILE")
+echo "Log file:      $LOG_FILE"
+echo "Total requests: $TOTAL"
 
-# Top 5 IPs
-echo -e "\nTop 5 IP addresses with the most requests:"
-awk '{print $1}' "$LOG_FILE" | sort | uniq -c | sort -nr | head -5 | awk '{print $2, "-", $1, "requests"}'
+echo ""
+echo "Top 5 IP addresses:"
+awk '{print $1}' "$LOG_FILE" \
+  | sort | uniq -c | sort -rn | head -5 \
+  | awk '{printf "  %-20s %s requests\n", $2, $1}'
 
-# Top 5 requested paths
-echo -e "\nTop 5 most requested paths:"
-awk '{print $7}' "$LOG_FILE" | sort | uniq -c | sort -nr | head -5 | awk '{print $2, "-", $1, "requests"}'
+echo ""
+echo "Top 5 requested paths:"
+awk '{print $7}' "$LOG_FILE" \
+  | sort | uniq -c | sort -rn | head -5 \
+  | awk '{printf "  %-40s %s requests\n", $2, $1}'
 
-# Top 5 response status codes
-echo -e "\nTop 5 response status codes:"
-awk '{print $9}' "$LOG_FILE" | sort | uniq -c | sort -nr | head -5 | awk '{print $2, "-", $1, "requests"}'
+echo ""
+echo "Top 5 response status codes:"
+awk '{print $9}' "$LOG_FILE" \
+  | sort | uniq -c | sort -rn | head -5 \
+  | awk '{printf "  %s   %s requests\n", $2, $1}'
 
-# Top 5 user agents
-echo -e "\nTop 5 user agents:"
-awk -F'"' '{print $6}' "$LOG_FILE" | sort | uniq -c | sort -nr | head -5 | awk '{print $2, "-", $1, "requests"}'
+echo ""
+echo "Top 5 user agents:"
+awk -F'"' '{if ($6 != "" && $6 != "-") print $6}' "$LOG_FILE" \
+  | sort | uniq -c | sort -rn | head -5 \
+  | awk '{
+      line = substr($0, index($0,$2))
+      printf "  [%s] %s\n", $1, line
+    }'
