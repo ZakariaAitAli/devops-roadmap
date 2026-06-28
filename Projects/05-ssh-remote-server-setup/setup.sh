@@ -1,12 +1,13 @@
 #!/bin/bash
+set -euo pipefail
 
-# Run this script on the remote EC2 instance after first login:
-#   ssh -i <key.pem> ec2-user@<EC2-PUBLIC-IP> 'bash -s' < setup.sh
+# Usage examples:
+#   # Copy keys to the server first, then run:
+#   scp ~/.ssh/id_ed25519_key1.pub ~/.ssh/id_ed25519_key2.pub ec2-user@<EC2-PUBLIC-IP>:~/
+#   ssh -i <key.pem> ec2-user@<EC2-PUBLIC-IP> 'bash setup.sh id_ed25519_key1.pub id_ed25519_key2.pub'
 #
-# Or copy it to the server and run it there:
-#   scp setup.sh ec2-user@<EC2-PUBLIC-IP>:~/ && ssh ec2-user@<EC2-PUBLIC-IP> 'bash setup.sh'
-
-set -e
+#   # Or pipe directly (keys must already be on the server):
+#   ssh -i <key.pem> ec2-user@<EC2-PUBLIC-IP> 'bash -s id_ed25519_key1.pub id_ed25519_key2.pub' < setup.sh
 
 KEY1_PUB=${1:?Usage: $0 <path-to-key1.pub> <path-to-key2.pub>}
 KEY2_PUB=${2:?Usage: $0 <path-to-key1.pub> <path-to-key2.pub>}
@@ -24,7 +25,13 @@ sudo tee /etc/ssh/sshd_config.d/hardening.conf > /dev/null <<'EOF'
 PermitRootLogin no
 PasswordAuthentication no
 EOF
-sudo systemctl restart sshd
+
+# Amazon Linux uses 'sshd'; Ubuntu uses 'ssh'
+if systemctl is-active --quiet sshd 2>/dev/null; then
+  sudo systemctl restart sshd
+else
+  sudo systemctl restart ssh
+fi
 echo "  Root login and password auth disabled"
 
 echo "[3/3] Installing and enabling Fail2Ban..."
@@ -38,5 +45,5 @@ echo "  Fail2Ban enabled"
 
 echo ""
 echo "Setup complete. Test both keys before closing this session:"
-echo "  ssh -i ~/.ssh/id_rsa_key1 ec2-user@<EC2-PUBLIC-IP>"
-echo "  ssh -i ~/.ssh/id_rsa_key2 ec2-user@<EC2-PUBLIC-IP>"
+echo "  ssh -i ~/.ssh/id_ed25519_key1 ec2-user@<EC2-PUBLIC-IP>"
+echo "  ssh -i ~/.ssh/id_ed25519_key2 ec2-user@<EC2-PUBLIC-IP>"

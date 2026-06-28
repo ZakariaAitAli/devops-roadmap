@@ -4,7 +4,7 @@ A Bash script that reports key performance metrics from any Linux server: CPU, m
 
 ## Requirements
 
-- Linux (any distribution with `bash`, `top`, `free`, `df`, `ps`, `uptime`, `lsb_release`)
+- Linux (any distribution with `bash`, `top`, `free`, `df`, `ps`, `uptime`; `/etc/os-release` or `lsb_release` for OS name)
 - Run as a user with read access to process information
 
 ## Usage
@@ -16,7 +16,7 @@ chmod +x server-stats.sh
 
 ## Output
 
-```
+```text
 === CPU Usage ===
 CPU Usage: 12.5%
 
